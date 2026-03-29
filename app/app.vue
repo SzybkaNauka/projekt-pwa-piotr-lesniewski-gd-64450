@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <Navbar />
+    <AppNavbar />
     <NuxtPage />
   </div>
 </template>
@@ -14,12 +14,13 @@
 
 html {
   font-family: Arial, sans-serif;
+  background-color: #07131f;
 }
 
 body {
   margin: 0;
-  background-color: #f5f7fb;
-  color: #1e293b;
+  background-color: #07131f;
+  color: #ffffff;
 }
 
 a {
