@@ -6,6 +6,15 @@ export default defineNuxtConfig({
 
   css: ['bulma/css/bulma.min.css', '~/assets/css/main.css'],
 
+  runtimeConfig: {
+    emailVerificationSecret: process.env.EMAIL_VERIFICATION_SECRET || '',
+    resendApiKey: process.env.RESEND_API_KEY || '',
+    resendFrom: process.env.RESEND_FROM || 'Prime Video <onboarding@resend.dev>',
+    public: {
+      appUrl: process.env.NUXT_PUBLIC_APP_URL || '',
+    },
+  },
+
   app: {
     head: {
       title: 'Prime Video',

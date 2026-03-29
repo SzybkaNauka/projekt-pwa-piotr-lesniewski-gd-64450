@@ -6,9 +6,36 @@ const visibleCatalog = computed(() => filterVisible(catalog, currentProfile.valu
 const visibleMovies = computed(() => filterVisible(movies, currentProfile.value, hiddenIds.value))
 const visibleSeries = computed(() => filterVisible(series, currentProfile.value, hiddenIds.value))
 const profileLimit = computed(() => currentProfile.value?.maturityLimit || 18)
+const trendTick = ref(0)
+
+const getTrendBaseScore = (title: string) =>
+  Array.from(title).reduce((score, char) => score + char.charCodeAt(0), 0)
+
+let trendInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  trendInterval = setInterval(() => {
+    trendTick.value += 1
+  }, 12000)
+})
+
+onBeforeUnmount(() => {
+  if (trendInterval) {
+    clearInterval(trendInterval)
+  }
+})
 
 const heroItem = computed(() => visibleCatalog.value[3] || visibleCatalog.value[0] || catalog[0])
-const trendingItems = computed(() => visibleCatalog.value.slice(0, 6))
+const trendingItems = computed(() =>
+  visibleCatalog.value
+    .map((item, index) => ({
+      item,
+      score: (getTrendBaseScore(item.title) + trendTick.value * 17 + index * 13) % 1000,
+    }))
+    .sort((left, right) => right.score - left.score)
+    .map(entry => entry.item)
+    .slice(0, 6),
+)
 const freshItems = computed(() => visibleCatalog.value.slice(3, 9))
 const movieSpotlight = computed(() => visibleMovies.value.slice(0, 6))
 const seriesSpotlight = computed(() => visibleSeries.value.slice(0, 6))
@@ -39,11 +66,15 @@ const continueItems = computed(() => {
 
     <MediaRow
       v-if="continueItems.length"
-      title="Kontynuuj ogladanie"
-      subtitle="Wroc do odtwarzania od ostatniego zapisanego momentu."
+      title="Obecnie ogladane"
+      :subtitle="`Sekcja zmienia sie od razu po przelaczeniu na profil ${currentProfile?.name || ''}.`"
       :items="continueItems"
     />
-    <MediaRow title="Popularne teraz" subtitle="Najczesciej odpalane tytuly w tym tygodniu." :items="trendingItems" />
+    <MediaRow
+      title="Trenduje teraz"
+      subtitle="Kolejnosc odswieza sie dynamicznie, aby symulowac zywy ranking Prime Video."
+      :items="trendingItems"
+    />
     <MediaRow title="Nowosci" subtitle="Swieze premiery i glosne dodatki do biblioteki." :items="freshItems" />
     <MediaRow title="Tresci do 13+" subtitle="Tytuly dostepne dla profilu 13+ oraz wyzszych." :items="profile13Items" />
     <MediaRow
