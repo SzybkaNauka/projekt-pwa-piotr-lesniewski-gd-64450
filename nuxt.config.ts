@@ -30,6 +30,7 @@ export default defineNuxtConfig({
 
   pwa: {
     registerType: 'autoUpdate',
+    includeAssets: ['favicon.ico'],
     manifest: {
       id: '/',
       name: 'StreamBox',
@@ -37,9 +38,55 @@ export default defineNuxtConfig({
       description: 'Nowoczesna aplikacja streamingowa',
       theme_color: '#07131f',
       background_color: '#07131f',
+      orientation: 'portrait',
+      categories: ['entertainment', 'video', 'lifestyle'],
+      lang: 'pl-PL',
+      dir: 'ltr',
       display: 'standalone',
+      display_override: ['window-controls-overlay', 'standalone', 'minimal-ui', 'browser'],
       start_url: '/',
       scope: '/',
+      shortcuts: [
+        {
+          name: 'Filmy',
+          short_name: 'Filmy',
+          description: 'Przejdz od razu do katalogu filmow.',
+          url: '/filmy',
+          icons: [
+            {
+              src: '/icons/icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+          ],
+        },
+        {
+          name: 'Seriale',
+          short_name: 'Seriale',
+          description: 'Przejdz od razu do seriali.',
+          url: '/seriale',
+          icons: [
+            {
+              src: '/icons/icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+          ],
+        },
+        {
+          name: 'Moja lista',
+          short_name: 'Lista',
+          description: 'Otworz zapamietane tytuly.',
+          url: '/moja-lista',
+          icons: [
+            {
+              src: '/icons/icon-192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+          ],
+        },
+      ],
       icons: [
         {
           src: '/icons/icon-192.png',
@@ -61,7 +108,35 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: '/',
-      globPatterns: ['**/*.{js,css,html,png,svg,ico,json}'],
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https?:\/\/[^/]+\/(?:$|filmy\/?$|seriale\/?$|moja-lista\/?$|about\/?$|watch\/.+$)/,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'pages',
+            networkTimeoutSeconds: 3,
+          },
+        },
+        {
+          urlPattern: /^https?:\/\/[^/]+\/(?:icons|images)\/.+\.(?:png|jpg|jpeg|svg|webp)$/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'images',
+          },
+        },
+        {
+          urlPattern: /^https?:\/\/[^/]+\/.+\.(?:woff|woff2|ttf|otf)$/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'fonts',
+            expiration: {
+              maxEntries: 10,
+              maxAgeSeconds: 60 * 60 * 24 * 365,
+            },
+          },
+        },
+      ],
     },
     devOptions: {
       enabled: true,

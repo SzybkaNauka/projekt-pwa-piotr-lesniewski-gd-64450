@@ -8,110 +8,165 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
-const isInstallable = ref(false)
-const isInstalled = ref(false)
-const isInstalling = ref(false)
+const installState = ref<'idle' | 'ready' | 'installing' | 'installed' | 'unsupported'>('unsupported')
 
-const checkInstalledState = () => {
+const isStandalone = () => {
   if (!import.meta.client) {
+    return false
+  }
+
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.matchMedia('(display-mode: window-controls-overlay)').matches
+}
+
+const syncInstallState = () => {
+  if (isStandalone()) {
+    installState.value = 'installed'
+    deferredPrompt.value = null
     return
   }
 
-  const standaloneMatch = window.matchMedia('(display-mode: standalone)').matches
-  const iosStandalone = 'standalone' in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
-  isInstalled.value = standaloneMatch || iosStandalone
-
-  if (isInstalled.value) {
-    isInstallable.value = false
-    deferredPrompt.value = null
-  }
+  installState.value = deferredPrompt.value ? 'ready' : 'idle'
 }
 
-const onBeforeInstallPrompt = (event: Event) => {
+const handleBeforeInstallPrompt = (event: Event) => {
   event.preventDefault()
   deferredPrompt.value = event as BeforeInstallPromptEvent
-  isInstallable.value = true
+  syncInstallState()
 }
 
-const onAppInstalled = () => {
-  checkInstalledState()
+const handleInstalled = () => {
+  installState.value = 'installed'
+  deferredPrompt.value = null
 }
 
 const installApp = async () => {
   if (!deferredPrompt.value) {
+    syncInstallState()
     return
   }
 
-  isInstalling.value = true
+  installState.value = 'installing'
+  await deferredPrompt.value.prompt()
+  const choice = await deferredPrompt.value.userChoice
 
-  try {
-    await deferredPrompt.value.prompt()
-    const { outcome } = await deferredPrompt.value.userChoice
-
-    if (outcome === 'accepted') {
-      isInstallable.value = false
-    }
-  }
-  finally {
+  if (choice.outcome === 'accepted') {
+    installState.value = 'installed'
     deferredPrompt.value = null
-    isInstalling.value = false
+    return
   }
+
+  installState.value = 'idle'
 }
 
-onMounted(() => {
-  checkInstalledState()
+const buttonLabel = computed(() => {
+  if (installState.value === 'installed') {
+    return 'Aplikacja zainstalowana'
+  }
 
-  window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
-  window.addEventListener('appinstalled', onAppInstalled)
+  if (installState.value === 'installing') {
+    return 'Instalowanie...'
+  }
+
+  return 'Zainstaluj aplikacje'
 })
 
-onBeforeUnmount(() => {
-  window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
-  window.removeEventListener('appinstalled', onAppInstalled)
+const helperText = computed(() => {
+  if (installState.value === 'installed') {
+    return 'Chrome uruchomi StreamBox jak natywna aplikacje.'
+  }
+
+  if (installState.value === 'ready') {
+    return 'Instalacja otworzy okno aplikacji bez paska przegladarki.'
+  }
+
+  return 'Jesli przycisk nie jest aktywny, uruchom build/preview na localhost i otworz menu Chrome > Zainstaluj aplikacje.'
+})
+
+onMounted(() => {
+  installState.value = 'idle'
+  syncInstallState()
+
+  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+  window.addEventListener('appinstalled', handleInstalled)
+
+  const standaloneMedia = window.matchMedia('(display-mode: standalone)')
+  const overlayMedia = window.matchMedia('(display-mode: window-controls-overlay)')
+
+  standaloneMedia.addEventListener('change', syncInstallState)
+  overlayMedia.addEventListener('change', syncInstallState)
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.removeEventListener('appinstalled', handleInstalled)
+    standaloneMedia.removeEventListener('change', syncInstallState)
+    overlayMedia.removeEventListener('change', syncInstallState)
+  })
 })
 </script>
 
 <template>
-  <button
-    v-if="isInstallable && !isInstalled"
-    class="install-button"
-    type="button"
-    :disabled="isInstalling"
-    @click="installApp"
-  >
-    {{ isInstalling ? 'Instalowanie...' : 'Zainstaluj appke' }}
-  </button>
+  <div class="pwa-install">
+    <button
+      class="pwa-install__button"
+      :class="{
+        'pwa-install__button--ready': installState === 'ready',
+        'pwa-install__button--installed': installState === 'installed',
+      }"
+      type="button"
+      :disabled="installState !== 'ready'"
+      :title="helperText"
+      @click="installApp"
+    >
+      {{ buttonLabel }}
+    </button>
+  </div>
 </template>
 
 <style scoped>
-.install-button {
-  height: 42px;
+.pwa-install {
+  display: flex;
+  align-items: center;
+}
+
+.pwa-install__button {
+  min-height: 42px;
   padding: 0 16px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
-  background: linear-gradient(135deg, #1f80d7, #39b3ff);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d7e1ea;
   font-size: 14px;
   font-weight: 700;
+  cursor: not-allowed;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pwa-install__button--ready {
+  border-color: transparent;
+  background: linear-gradient(135deg, #33a7ff, #1f80d7);
+  color: #fff;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-  box-shadow: 0 10px 22px rgba(31, 128, 215, 0.24);
 }
 
-.install-button:hover {
+.pwa-install__button--installed {
+  border-color: rgba(51, 167, 255, 0.45);
+  background: rgba(51, 167, 255, 0.14);
+  color: #fff;
+}
+
+.pwa-install__button--ready:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(31, 128, 215, 0.3);
 }
 
-.install-button:disabled {
-  opacity: 0.7;
-  cursor: wait;
-  transform: none;
-  box-shadow: none;
-}
+@media (max-width: 980px) {
+  .pwa-install {
+    width: 100%;
+    justify-content: center;
+    order: 4;
+  }
 
-@media (max-width: 640px) {
-  .install-button {
+  .pwa-install__button {
     width: 100%;
     justify-content: center;
   }

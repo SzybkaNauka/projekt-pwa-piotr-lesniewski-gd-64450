@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const router = useRouter()
-const { getById } = useCatalog()
+const { catalog, getById } = useCatalog()
 const { isFavorite, toggleFavorite, updateContinueWatching, removeFromContinueWatching } = useProfiles()
 
 const mediaId = computed(() => String(route.params.id || ''))
@@ -29,6 +29,19 @@ const videoSource = computed(() =>
   isTrailer.value ? item.value!.trailer : item.value!.videoSources[selectedQuality.value] || item.value!.trailer,
 )
 const favoriteActive = computed(() => isFavorite(item.value!.id))
+const relatedItems = computed(() =>
+  catalog
+    .filter(candidate => candidate.id !== item.value!.id && candidate.type === item.value!.type)
+    .slice(0, 4),
+)
+const playbackLabel = computed(() => {
+  if (playing.value) {
+    return 'Pauza'
+  }
+
+  return loaded.value ? 'Start' : 'Ladowanie...'
+})
+const shouldShowSkipIntro = computed(() => !isTrailer.value && duration.value > 0 && currentTime.value < 30)
 
 const formatTime = (value: number) => {
   if (!Number.isFinite(value)) {
@@ -66,6 +79,20 @@ const syncState = () => {
   }
 }
 
+const markVideoReady = () => {
+  loaded.value = true
+  syncState()
+}
+
+const goBack = async () => {
+  if (window.history.length > 1) {
+    router.back()
+    return
+  }
+
+  await router.push('/')
+}
+
 const togglePlayback = async () => {
   const video = videoRef.value
   if (!video) {
@@ -79,6 +106,21 @@ const togglePlayback = async () => {
     video.pause()
     playing.value = false
   }
+}
+
+const seekBy = (seconds: number) => {
+  const video = videoRef.value
+  if (!video) {
+    return
+  }
+
+  const nextTime = Math.min(Math.max(video.currentTime + seconds, 0), video.duration || 0)
+  video.currentTime = nextTime
+  currentTime.value = nextTime
+}
+
+const skipIntro = () => {
+  seekBy(30)
 }
 
 const seekTo = (event: Event) => {
@@ -142,7 +184,50 @@ const handleEnded = () => {
   }
 }
 
+const isEditableTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  const tagName = target.tagName
+  return target.isContentEditable || tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT'
+}
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && showXRay.value) {
+    showXRay.value = false
+    return
+  }
+
+  if (isEditableTarget(event.target)) {
+    return
+  }
+
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    seekBy(-10)
+  }
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    seekBy(10)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+
+  if (videoRef.value?.readyState && videoRef.value.readyState >= HTMLMediaElement.HAVE_METADATA) {
+    loaded.value = true
+  }
+})
+
+watch(videoSource, () => {
+  loaded.value = false
+})
+
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
   syncState()
 })
 </script>
@@ -158,7 +243,10 @@ onBeforeUnmount(() => {
             :src="videoSource"
             :poster="item!.cover"
             playsinline
-            @loadedmetadata="loaded = true; syncState()"
+            @loadedmetadata="markVideoReady"
+            @loadeddata="markVideoReady"
+            @canplay="markVideoReady"
+            @waiting="loaded = false"
             @timeupdate="syncState"
             @play="playing = true"
             @pause="playing = false"
@@ -167,10 +255,9 @@ onBeforeUnmount(() => {
 
           <div class="player__overlay">
             <div class="player__topbar">
-              <button class="player__ghost" type="button" @click="router.back()">
+              <button class="player__ghost" type="button" @click="goBack">
                 Wroc
               </button>
-
               <div class="player__top-actions">
                 <button class="player__ghost" type="button" @click="toggleFavorite(item!.id)">
                   {{ favoriteActive ? 'Usun z listy' : 'Dodaj do listy' }}
@@ -182,17 +269,21 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="player__bottom">
-              <div>
+              <div class="player__summary">
                 <p class="player__eyebrow">{{ isTrailer ? 'Zwiastun' : item!.badge }}</p>
                 <h1 class="player__title">{{ item!.title }}</h1>
                 <p class="player__meta">
-                  {{ item!.year }} • {{ item!.duration }} • {{ item!.maturity }}
+                  {{ item!.year }} | {{ item!.duration }} | {{ item!.maturity }}
                 </p>
+                <div class="player__info-chips">
+                  <span class="player__info-chip">{{ item!.ranking }}</span>
+                  <span class="player__info-chip">{{ item!.genres.join(' / ') }}</span>
+                </div>
               </div>
 
               <div class="player__controls">
                 <div class="player__timeline">
-                  <span>{{ formatTime(currentTime) }}</span>
+                  <span class="player__time">{{ formatTime(currentTime) }}</span>
                   <input
                     class="player__range"
                     type="range"
@@ -202,26 +293,52 @@ onBeforeUnmount(() => {
                     step="0.1"
                     @input="seekTo"
                   >
-                  <span>{{ formatTime(duration) }}</span>
+                  <span class="player__time">{{ formatTime(duration) }}</span>
                 </div>
 
                 <div class="player__actions">
-                  <button class="player__button player__button--primary" type="button" @click="togglePlayback">
-                    {{ playing ? 'Pauza' : loaded ? 'Play' : 'Ladowanie...' }}
-                  </button>
+                  <div class="player__action-group player__action-group--primary">
+                    <button class="player__button player__button--primary" type="button" @click="togglePlayback">
+                      {{ playbackLabel }}
+                    </button>
 
-                  <label class="player__volume">
-                    Glosnosc
-                    <input
-                      class="player__range player__range--short"
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      :value="volume"
-                      @input="updateVolume"
+                    <button
+                      v-if="shouldShowSkipIntro"
+                      class="player__button player__button--accent"
+                      type="button"
+                      @click="skipIntro"
                     >
-                  </label>
+                      Pomin intro
+                    </button>
+                  </div>
+
+                  <div class="player__action-group">
+                    <div class="player__seek-group">
+                      <button class="player__button" type="button" @click="seekBy(-10)">
+                        -10 s
+                      </button>
+                      <button class="player__button" type="button" @click="seekBy(10)">
+                        +10 s
+                      </button>
+                    </div>
+
+                    <label class="player__volume">
+                      Glosnosc
+                      <input
+                        class="player__range player__range--short"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        :value="volume"
+                        @input="updateVolume"
+                      >
+                    </label>
+
+                    <button class="player__button" type="button" @click="toggleFullscreen">
+                      Fullscreen
+                    </button>
+                  </div>
 
                   <div v-if="!isTrailer" class="player__quality">
                     <span>Jakosc</span>
@@ -236,10 +353,6 @@ onBeforeUnmount(() => {
                       {{ quality }}
                     </button>
                   </div>
-
-                  <button class="player__button" type="button" @click="toggleFullscreen">
-                    Fullscreen
-                  </button>
                 </div>
               </div>
             </div>
@@ -260,6 +373,19 @@ onBeforeUnmount(() => {
           <div>
             <p class="watch-page__eyebrow">Gatunki</p>
             <p class="watch-page__text">{{ item!.genres.join(' / ') }}</p>
+          </div>
+        </section>
+
+        <section v-if="relatedItems.length" class="watch-page__rail">
+          <div class="watch-page__rail-header">
+            <div>
+              <p class="watch-page__eyebrow">Podobne tytuly</p>
+              <h2 class="watch-page__rail-title">Kontynuuj wieczor jak w Prime Video</h2>
+            </div>
+          </div>
+
+          <div class="watch-page__rail-grid">
+            <MediaCard v-for="relatedItem in relatedItems" :key="relatedItem.id" :item="relatedItem" />
           </div>
         </section>
       </div>
@@ -326,24 +452,39 @@ onBeforeUnmount(() => {
 
 .player__bottom {
   align-items: end;
+  gap: 18px;
 }
 
 .player__controls {
-  min-width: min(620px, 100%);
+  min-width: min(720px, 100%);
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+.player__summary {
+  flex: 1 1 340px;
+  min-width: 0;
+}
+
 .player__timeline {
+  pointer-events: auto;
   padding: 12px 14px;
   border-radius: 16px;
   background-color: rgba(7, 19, 31, 0.58);
   backdrop-filter: blur(12px);
 }
 
+.player__time {
+  flex: 0 0 56px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 .player__range {
   flex: 1;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .player__range--short {
@@ -351,8 +492,12 @@ onBeforeUnmount(() => {
 }
 
 .player__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   flex-wrap: wrap;
   pointer-events: auto;
+  gap: 12px;
 }
 
 .player__ghost,
@@ -382,13 +527,55 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
+.player__button--accent {
+  background: linear-gradient(135deg, #1f80d7, #39b3ff);
+  color: #fff;
+  font-weight: 700;
+}
+
+.player__action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.player__action-group--primary {
+  justify-content: flex-start;
+}
+
 .player__quality {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
   background-color: rgba(255, 255, 255, 0.08);
+  min-width: 0;
+}
+
+.player__seek-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.player__info-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.player__info-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #d7e1ea;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
 .player__chip {
@@ -443,6 +630,29 @@ onBeforeUnmount(() => {
   background-color: #102131;
 }
 
+.watch-page__rail {
+  margin-top: 28px;
+}
+
+.watch-page__rail-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.watch-page__rail-title {
+  margin: 0;
+  font-size: 28px;
+}
+
+.watch-page__rail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .watch-page__eyebrow {
   margin: 0 0 10px;
   color: #8ea2b6;
@@ -472,8 +682,16 @@ onBeforeUnmount(() => {
     min-width: 100%;
   }
 
+  .player__actions {
+    grid-template-columns: 1fr;
+  }
+
   .watch-page__details {
     grid-template-columns: 1fr;
+  }
+
+  .watch-page__rail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -488,6 +706,26 @@ onBeforeUnmount(() => {
 
   .player__timeline {
     flex-wrap: wrap;
+  }
+
+  .player__time {
+    flex-basis: auto;
+    text-align: left;
+  }
+
+  .watch-page__rail-title {
+    font-size: 22px;
+  }
+
+  .watch-page__rail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .player__seek-group,
+  .player__button,
+  .player__volume,
+  .player__quality {
+    width: 100%;
   }
 }
 </style>
