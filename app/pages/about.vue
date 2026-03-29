@@ -2,7 +2,7 @@
   <main class="about-page section">
     <section class="about-page__box box">
       <p class="about-page__eyebrow">O aplikacji</p>
-      <h1 class="about-page__title">StreamBox</h1>
+      <h1 class="about-page__title">Prime Video</h1>
       <p class="about-page__text">
         Projekt inspirowany nowoczesnymi platformami VOD. Aplikacja zostala przygotowana w Nuxt 4
         z naciskiem na nowoczesny interfejs, routing oraz PWA. Warstwa komponentowa korzysta tez
@@ -20,7 +20,7 @@
           <p class="about-page__install-label">Instalacja w Chrome</p>
           <p class="about-page__install-text">
             Po uruchomieniu builda lub preview na localhost Chrome powinien pokazac mozliwosc
-            instalacji jako aplikacji. Po instalacji StreamBox otworzy sie w osobnym oknie i mozna
+            instalacji jako aplikacji. Po instalacji Prime Video otworzy sie w osobnym oknie i mozna
             go normalnie odinstalowac z poziomu Chrome.
           </p>
         </div>

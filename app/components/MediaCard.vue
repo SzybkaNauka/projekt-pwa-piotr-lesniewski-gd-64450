@@ -17,7 +17,7 @@ const hasContinueProgress = computed(() => typeof props.item.progress === 'numbe
 const progressValue = computed(() => Math.round(props.item.progress || 0))
 const quickActionLabel = computed(() => hasContinueProgress.value ? 'Usun z ogladaj dalej' : 'Ukryj tytul')
 const primaryActionLabel = computed(() => hasContinueProgress.value ? 'Wznow' : 'Odtworz')
-const packageLabel = computed(() => hasContinueProgress.value ? 'W pakiecie StreamBox' : 'Dostepne w StreamBox')
+const packageLabel = computed(() => hasContinueProgress.value ? 'W pakiecie Prime Video' : 'Dostepne w Prime Video')
 </script>
 
 <template>
@@ -27,7 +27,7 @@ const packageLabel = computed(() => hasContinueProgress.value ? 'W pakiecie Stre
         <img :src="item.poster" :alt="item.title" class="media-card__image">
         <div class="media-card__gradient"></div>
         <span class="media-card__image-badge">{{ item.badge }}</span>
-        <span class="media-card__image-mark">streambox</span>
+        <span class="media-card__image-mark">prime video</span>
 
         <button
           v-if="hasContinueProgress"

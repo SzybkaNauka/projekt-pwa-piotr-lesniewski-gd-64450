@@ -83,9 +83,10 @@ watch(
   <header class="navbar">
     <div class="navbar__container">
       <div class="navbar__brand">
-        <NuxtLink to="/" class="navbar__logo" aria-label="StreamBox">
-          <span class="navbar__logo-mark">stream</span>
-          <span class="navbar__logo-text">box</span>
+        <NuxtLink to="/" class="navbar__logo" aria-label="Prime Video">
+          <span class="navbar__logo-prime">prime</span>
+          <span class="navbar__logo-video">video</span>
+          <span class="navbar__logo-smile" aria-hidden="true"></span>
         </NuxtLink>
       </div>
 
@@ -99,8 +100,13 @@ watch(
         <NuxtLink to="/seriale" class="navbar__nav-link" :class="{ 'navbar__nav-link--active': route.path === '/seriale' }">
           Seriale
         </NuxtLink>
-        <NuxtLink to="/moja-lista" class="navbar__nav-link" :class="{ 'navbar__nav-link--active': route.path === '/moja-lista' }">
-          Moja lista
+        <span class="navbar__divider" aria-hidden="true"></span>
+        <NuxtLink to="/about" class="navbar__nav-link navbar__nav-link--prime">
+          <span class="navbar__nav-prime-text">prime</span>
+          <span class="navbar__nav-prime-smile" aria-hidden="true"></span>
+        </NuxtLink>
+        <NuxtLink to="/moja-lista" class="navbar__nav-link">
+          Subskrypcje
         </NuxtLink>
       </nav>
 
@@ -229,11 +235,9 @@ watch(
           </div>
         </div>
 
-        <PwaInstallButton />
-
         <div class="navbar__menu">
           <button class="navbar__avatar" type="button" @click="accountOpen = !accountOpen">
-            {{ currentProfile?.name?.charAt(0) || 'P' }}
+            <span class="navbar__avatar-icon" aria-hidden="true"></span>
           </button>
 
           <div v-if="accountOpen" class="navbar__dropdown navbar__dropdown--account">
@@ -259,19 +263,24 @@ watch(
   position: sticky;
   top: 0;
   z-index: 100;
+  padding: 2px 2px 0;
   background:
-    linear-gradient(180deg, rgba(1, 10, 20, 0.96), rgba(1, 10, 20, 0.9) 72%, rgba(1, 10, 20, 0.4)),
-    #05101b;
-  backdrop-filter: blur(18px);
+    linear-gradient(180deg, rgba(18, 26, 35, 0.98), rgba(18, 26, 35, 0.92) 70%, rgba(18, 26, 35, 0.2)),
+    #121a23;
+  backdrop-filter: blur(12px);
 }
 
 .navbar__container {
   display: flex;
   align-items: center;
-  gap: 30px;
-  max-width: 1520px;
+  gap: 24px;
+  width: min(100%, 1808px);
   margin: 0 auto;
-  padding: 14px 24px;
+  min-height: 54px;
+  padding: 0 18px 0 20px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(180deg, rgba(49, 56, 65, 0.98), rgba(40, 46, 54, 0.98));
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .navbar__brand {
@@ -279,40 +288,76 @@ watch(
 }
 
 .navbar__logo {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "prime video"
+    "smile smile";
+  align-items: end;
+  column-gap: 2px;
   color: #ffffff;
-  font-size: 31px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: -0.05em;
-  line-height: 0.9;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
-.navbar__logo-mark {
-  color: #cfd8e3;
-  font-weight: 600;
+.navbar__logo-prime {
+  grid-area: prime;
+  color: #f6f8fb;
 }
 
-.navbar__logo-text {
-  color: #ffffff;
+.navbar__logo-video {
+  grid-area: video;
+  color: #f6f8fb;
+}
+
+.navbar__logo-smile {
+  position: relative;
+  grid-area: smile;
+  justify-self: end;
+  width: 31px;
+  height: 9px;
+  margin-top: 1px;
+  border-bottom: 2px solid #b7e5ff;
+  border-radius: 0 0 999px 999px;
+  transform: rotate(-8deg);
+  opacity: 0.95;
+}
+
+.navbar__logo-smile::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -2px;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid #b7e5ff;
+  border-right: 2px solid #b7e5ff;
+  transform: rotate(34deg);
 }
 
 .navbar__nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   margin-right: auto;
+  margin-left: 8px;
 }
 
 .navbar__nav-link {
-  padding: 11px 16px;
-  border-radius: 13px;
-  color: #e8eef5;
-  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 11px;
+  color: #f1f4f7;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  letter-spacing: -0.015em;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .navbar__nav-link:hover {
@@ -320,14 +365,64 @@ watch(
 }
 
 .navbar__nav-link--active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.09));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 10px rgba(0, 0, 0, 0.14);
+}
+
+.navbar__divider {
+  width: 1px;
+  height: 26px;
+  margin: 0 12px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.navbar__nav-link--prime {
+  gap: 4px;
+  padding-right: 12px;
+}
+
+.navbar__nav-prime-text {
+  position: relative;
+  top: -1px;
+}
+
+.navbar__nav-prime-smile {
+  position: relative;
+  width: 26px;
+  height: 10px;
+  margin-left: -2px;
+}
+
+.navbar__nav-prime-smile::before,
+.navbar__nav-prime-smile::after {
+  content: "";
+  position: absolute;
+}
+
+.navbar__nav-prime-smile::before {
+  inset: 3px 2px 0 1px;
+  border-bottom: 2px solid #b7e5ff;
+  border-radius: 0 0 999px 999px;
+  transform: rotate(-7deg);
+}
+
+.navbar__nav-prime-smile::after {
+  right: 0;
+  bottom: 1px;
+  width: 5px;
+  height: 5px;
+  border-top: 2px solid #b7e5ff;
+  border-right: 2px solid #b7e5ff;
+  transform: rotate(30deg);
 }
 
 .navbar__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .navbar__menu,
@@ -339,8 +434,8 @@ watch(
 .navbar__avatar {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -355,8 +450,38 @@ watch(
 }
 
 .navbar__avatar {
-  background: linear-gradient(135deg, #3097ff, #1f74d9);
-  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #55b6e4, #2e8dce);
+}
+
+.navbar__avatar-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+}
+
+.navbar__avatar-icon::before,
+.navbar__avatar-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  background: #ffffff;
+  transform: translateX(-50%);
+}
+
+.navbar__avatar-icon::before {
+  top: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.navbar__avatar-icon::after {
+  bottom: 0;
+  width: 16px;
+  height: 8px;
+  border-radius: 8px 8px 4px 4px;
 }
 
 .navbar__icon {
@@ -418,8 +543,8 @@ watch(
 .navbar__search {
   display: flex;
   align-items: center;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 999px;
 }
 
@@ -621,5 +746,48 @@ watch(
   margin: 0 0 14px;
   color: #9cb1c5;
   font-size: 14px;
+}
+
+@media (max-width: 1024px) {
+  .navbar__container {
+    gap: 14px;
+    padding: 0 12px;
+  }
+
+  .navbar__nav {
+    gap: 2px;
+  }
+
+  .navbar__nav-link {
+    padding: 0 11px;
+    font-size: 14px;
+  }
+
+  .navbar__divider {
+    margin: 0 8px;
+  }
+
+  .navbar__search--open .navbar__search-input {
+    width: 180px;
+  }
+}
+
+@media (max-width: 820px) {
+  .navbar__container {
+    flex-wrap: wrap;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .navbar__nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .navbar__actions {
+    margin-left: auto;
+  }
 }
 </style>

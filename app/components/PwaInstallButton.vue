@@ -73,7 +73,7 @@ const buttonLabel = computed(() => {
 
 const helperText = computed(() => {
   if (installState.value === 'installed') {
-    return 'Chrome uruchomi StreamBox jak natywna aplikacje.'
+    return 'Chrome uruchomi Prime Video jak natywna aplikacje.'
   }
 
   if (installState.value === 'ready') {

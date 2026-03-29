@@ -115,9 +115,9 @@ const mediaCatalog: MediaItem[] = [
     duration: '2 h 01 min',
     maturity: '13+',
     badge: 'NOWY FILM',
-    ranking: '#4 w Polsce',
+    ranking: '#6 w Polsce',
     description:
-      'Historyczna opowiesc o grupie ludzi, ktorzy ruszaja w niebezpieczna droge przez pogranicze.',
+      'W dorocznym Wielkim Marszu bierze udzial piecdziesieciu wyselekcjonowanych nastolatkow. Zasada jest prosta: kto zostaje w tyle, ten odpada.',
     shortDescription: 'Wielka przygoda i mocne emocje.',
     poster: '/images/posters/poster-4.jpg',
     cover: '/images/hero/hero-main.jpg',
