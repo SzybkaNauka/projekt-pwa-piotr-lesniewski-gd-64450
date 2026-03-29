@@ -1,9 +1,9 @@
 <script setup lang="ts">
-const { isAuthenticated, ensureProfileLogin } = useProfiles()
+const { closeProfileSelector } = useProfiles()
 
-if (!isAuthenticated.value) {
-  ensureProfileLogin()
-}
+onMounted(() => {
+  closeProfileSelector()
+})
 </script>
 
 <template>

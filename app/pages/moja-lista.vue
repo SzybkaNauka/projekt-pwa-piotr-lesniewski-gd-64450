@@ -5,6 +5,7 @@ const {
   favoriteIds,
   hiddenIds,
   continueWatchingEntries,
+  getProfileAudienceLabel,
   unhideTitle,
 } = useProfiles()
 
@@ -27,6 +28,7 @@ const hiddenItems = computed(() => getByIds(hiddenIds.value))
       <h1 class="list-page__title">Moja lista</h1>
       <p class="list-page__text">
         Aktywny profil: <strong>{{ currentProfile?.name }}</strong>
+        / {{ getProfileAudienceLabel(currentProfile) }}
       </p>
     </section>
 
@@ -41,7 +43,7 @@ const hiddenItems = computed(() => getByIds(hiddenIds.value))
           <img :src="item.poster" :alt="item.title" class="list-page__hidden-image">
           <div>
             <h3 class="list-page__hidden-title">{{ item.title }}</h3>
-            <p class="list-page__hidden-meta">{{ item.year }} • {{ item.type }}</p>
+            <p class="list-page__hidden-meta">{{ item.year }} / {{ item.type }}</p>
           </div>
           <button class="list-page__hidden-button" type="button" @click="unhideTitle(item.id)">
             Przywroc
@@ -119,16 +121,15 @@ const hiddenItems = computed(() => getByIds(hiddenIds.value))
 
 .list-page__hidden-meta {
   margin: 0;
-  color: #9bb0c5;
+  color: #a4b4c4;
 }
 
 .list-page__hidden-button {
-  padding: 12px 18px;
+  padding: 10px 14px;
   border: none;
   border-radius: 12px;
-  background-color: #1f80d7;
+  background-color: rgba(51, 167, 255, 0.16);
   color: #fff;
   cursor: pointer;
 }
-
 </style>

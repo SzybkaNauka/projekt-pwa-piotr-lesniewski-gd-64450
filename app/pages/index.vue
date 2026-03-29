@@ -5,12 +5,16 @@ const { currentProfile, hiddenIds, continueWatchingEntries, favoriteIds } = useP
 const visibleCatalog = computed(() => filterVisible(catalog, currentProfile.value, hiddenIds.value))
 const visibleMovies = computed(() => filterVisible(movies, currentProfile.value, hiddenIds.value))
 const visibleSeries = computed(() => filterVisible(series, currentProfile.value, hiddenIds.value))
+const profileLimit = computed(() => currentProfile.value?.maturityLimit || 18)
 
 const heroItem = computed(() => visibleCatalog.value[3] || visibleCatalog.value[0] || catalog[0])
 const trendingItems = computed(() => visibleCatalog.value.slice(0, 6))
 const freshItems = computed(() => visibleCatalog.value.slice(3, 9))
 const movieSpotlight = computed(() => visibleMovies.value.slice(0, 6))
 const seriesSpotlight = computed(() => visibleSeries.value.slice(0, 6))
+const profile13Items = computed(() => visibleCatalog.value.filter(item => item.maturity === '7+' || item.maturity === '13+').slice(0, 6))
+const profile16Items = computed(() => visibleCatalog.value.filter(item => item.maturity === '16+').slice(0, 6))
+const profile18Items = computed(() => visibleCatalog.value.filter(item => item.maturity === '18+').slice(0, 6))
 const favorites = computed(() => getByIds(favoriteIds.value))
 const continueItems = computed(() => {
   const progressById = new Map(continueWatchingEntries.value.map(entry => [entry.id, entry.progress]))
@@ -26,10 +30,10 @@ const continueItems = computed(() => {
     <MediaHero :item="heroItem" />
 
     <section class="home-page__lead page-wrap">
-      <p class="home-page__lead-title">Filmy, ktore moga Ci sie spodobac</p>
+      <p class="home-page__lead-title">Biblioteka dopasowana do aktywnego profilu</p>
       <p class="home-page__lead-copy">
-        Desktopowy uklad inspirowany platformami VOD: duzy hero, szybka szukajka, kategorie pod menu
-        i przejrzyste sekcje ogladania.
+        Profil 13+ widzi tylko bezpieczniejsze tytuly, profil 16+ dostaje tez mocniejsze pozycje,
+        a profil 18+ ma pelny katalog wraz z tresciami dla doroslych.
       </p>
     </section>
 
@@ -41,6 +45,19 @@ const continueItems = computed(() => {
     />
     <MediaRow title="Popularne teraz" subtitle="Najczesciej odpalane tytuly w tym tygodniu." :items="trendingItems" />
     <MediaRow title="Nowosci" subtitle="Swieze premiery i glosne dodatki do biblioteki." :items="freshItems" />
+    <MediaRow title="Tresci do 13+" subtitle="Tytuly dostepne dla profilu 13+ oraz wyzszych." :items="profile13Items" />
+    <MediaRow
+      v-if="profileLimit >= 16"
+      title="Tresci 16+"
+      subtitle="Mocniejsze filmy i seriale widoczne dla profilu 16+ i 18+."
+      :items="profile16Items"
+    />
+    <MediaRow
+      v-if="profileLimit >= 18"
+      title="Tresci 18+"
+      subtitle="Pelny katalog dla profilu 18+ z najmocniejszymi tytulami."
+      :items="profile18Items"
+    />
     <MediaRow title="Filmy" subtitle="Akcja, thriller, science fiction i mocne premiery." :items="movieSpotlight" />
     <MediaRow title="Seriale" subtitle="Sezony, ktore warto zaczac jeszcze dzisiaj." :items="seriesSpotlight" />
     <MediaRow v-if="favorites.length" title="Moja lista" subtitle="Zapisane pozycje aktywnego profilu." :items="favorites" />

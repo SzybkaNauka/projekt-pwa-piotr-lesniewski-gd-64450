@@ -35,13 +35,12 @@ const audienceConfig = {
 
 const defaultProfiles: StreamProfile[] = [
   { id: 'p1', name: 'Piotr', color: '#1f80d7', kids: false, audience: 'adults', maturityLimit: 18 },
-  { id: 'p2', name: 'Dzieci', color: '#f59e0b', kids: true, audience: 'kids', maturityLimit: 13 },
+  { id: 'p2', name: 'Profil 13+', color: '#f59e0b', kids: true, audience: 'kids', maturityLimit: 13 },
 ]
 
 export const useProfiles = () => {
   const profiles = useState<StreamProfile[]>('profiles', () => defaultProfiles)
   const activeProfileId = useState<string>('active-profile-id', () => 'p1')
-  const isAuthenticated = useState<boolean>('profiles-authenticated', () => false)
   const favoriteMap = useState<Record<string, string[]>>('favorite-map', () => ({
     p1: [],
     p2: [],
@@ -112,7 +111,6 @@ export const useProfiles = () => {
   const setActiveProfile = (profileId: string) => {
     activeProfileId.value = profileId
     ensureAllBuckets(profileId)
-    isAuthenticated.value = true
     profileSelectorOpen.value = false
   }
 
@@ -121,10 +119,6 @@ export const useProfiles = () => {
   }
 
   const closeProfileSelector = () => {
-    if (!isAuthenticated.value) {
-      return
-    }
-
     profileSelectorOpen.value = false
   }
 
@@ -132,7 +126,11 @@ export const useProfiles = () => {
     const normalizedName = name.trim()
 
     if (!normalizedName || profiles.value.length >= 6) {
-      return
+      return false
+    }
+
+    if (profiles.value.some(profile => profile.name.toLowerCase() === normalizedName.toLowerCase())) {
+      return false
     }
 
     const newId = `p${Date.now()}`
@@ -148,6 +146,8 @@ export const useProfiles = () => {
     })
 
     ensureAllBuckets(newId)
+    setActiveProfile(newId)
+    return true
   }
 
   const removeProfile = (profileId: string) => {
@@ -229,30 +229,25 @@ export const useProfiles = () => {
       continueWatchingEntries.value.filter(item => item.id !== id)
   }
 
-  const ensureProfileLogin = () => {
-    profileSelectorOpen.value = true
-  }
-
   const getProfileAudienceLabel = (profile?: Pick<StreamProfile, 'audience' | 'maturityLimit'> | null) => {
     if (!profile) {
       return 'Profil'
     }
 
     if (profile.audience === 'kids') {
-      return 'Profil dzieci 13+'
+      return 'Profil 13+'
     }
 
     if (profile.audience === 'teens') {
-      return 'Profil mlodziezowy 16+'
+      return 'Profil 16+'
     }
 
-    return 'Profil dorosly 18+'
+    return 'Profil 18+'
   }
 
   return {
     profiles,
     activeProfileId,
-    isAuthenticated,
     currentProfile,
     favoriteIds,
     hiddenIds,
@@ -261,7 +256,6 @@ export const useProfiles = () => {
     setActiveProfile,
     openProfileSelector,
     closeProfileSelector,
-    ensureProfileLogin,
     addProfile,
     removeProfile,
     getProfileAudienceLabel,

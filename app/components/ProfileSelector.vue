@@ -2,7 +2,6 @@
 const {
   profiles,
   currentProfile,
-  isAuthenticated,
   profileSelectorOpen,
   setActiveProfile,
   addProfile,
@@ -13,27 +12,35 @@ const {
 
 const newProfileName = ref('')
 const newProfileAudience = ref<'kids' | 'teens' | 'adults'>('adults')
+const addError = ref('')
 
 const audienceOptions = [
   {
     value: 'kids' as const,
-    label: 'Dziecko',
-    helper: 'Tylko tresci do 13+',
+    label: 'Profil 13+',
+    helper: 'Widoczne tylko tresci do 13+',
   },
   {
     value: 'teens' as const,
-    label: 'Nastolatek',
-    helper: 'Pokazuje tresci do 16+',
+    label: 'Profil 16+',
+    helper: 'Widoczne tresci 13+ i 16+',
   },
   {
     value: 'adults' as const,
-    label: 'Dorosly',
-    helper: 'Pelny katalog z tresciami 18+',
+    label: 'Profil 18+',
+    helper: 'Widoczne wszystkie tresci, takze 18+',
   },
 ]
 
 const handleAddProfile = () => {
-  addProfile(newProfileName.value, newProfileAudience.value)
+  const created = addProfile(newProfileName.value, newProfileAudience.value)
+
+  if (!created) {
+    addError.value = 'Podaj unikalna nazwe profilu. Maksymalnie mozna miec 6 profili.'
+    return
+  }
+
+  addError.value = ''
   newProfileName.value = ''
   newProfileAudience.value = 'adults'
 }
@@ -46,14 +53,14 @@ const handleAddProfile = () => {
     <div class="profile-modal__box">
       <div class="profile-modal__header">
         <div>
-          <p class="profile-modal__eyebrow">{{ isAuthenticated ? 'Przelacz profil' : 'Logowanie profilem' }}</p>
-          <h2 class="profile-modal__title">{{ isAuthenticated ? 'Wybierz profil' : 'Kto teraz oglada?' }}</h2>
+          <p class="profile-modal__eyebrow">Profile</p>
+          <h2 class="profile-modal__title">Wybierz lub dodaj profil</h2>
           <p class="profile-modal__lead">
-            Profile dzieciece nie wyswietlaja tresci 18+, a profil dorosly pokazuje pelny katalog.
+            Kazdy profil pokazuje tylko swoj zakres tresci: 13+, 16+ albo pelen katalog 18+.
           </p>
         </div>
 
-        <button v-if="isAuthenticated" class="profile-modal__close" type="button" @click="closeProfileSelector">X</button>
+        <button class="profile-modal__close" type="button" @click="closeProfileSelector">X</button>
       </div>
 
       <div class="profile-modal__grid">
@@ -96,6 +103,8 @@ const handleAddProfile = () => {
             class="profile-modal__input input"
             type="text"
             maxlength="16"
+            @input="addError = ''"
+            @keydown.enter.prevent="handleAddProfile"
             placeholder="Np. Ola"
           >
 
@@ -112,6 +121,8 @@ const handleAddProfile = () => {
               <span class="profile-modal__audience-helper">{{ option.helper }}</span>
             </button>
           </div>
+
+          <p v-if="addError" class="profile-modal__error">{{ addError }}</p>
 
           <button class="profile-modal__create-button button is-info" type="button" @click="handleAddProfile">
             Dodaj
@@ -335,6 +346,13 @@ const handleAddProfile = () => {
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+}
+
+.profile-modal__error {
+  margin: -4px 0 0;
+  color: #ff9f9f;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 @media (max-width: 860px) {

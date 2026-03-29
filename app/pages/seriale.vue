@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { series, filterVisible } = useCatalog()
-const { currentProfile, hiddenIds, continueWatchingEntries } = useProfiles()
+const { currentProfile, hiddenIds, continueWatchingEntries, getProfileAudienceLabel } = useProfiles()
 
 const visibleSeries = computed(() => filterVisible(series, currentProfile.value, hiddenIds.value))
 const seriesLead = computed(() => visibleSeries.value.slice(0, 6))
@@ -18,7 +18,7 @@ const continueSeries = computed(() =>
   <main class="page">
     <section class="page__hero page-wrap">
       <h1 class="page__title">Seriale</h1>
-      <p class="page__text">Nowe sezony, polecane serie i najmocniejsze premiery.</p>
+      <p class="page__text">Seriale dopasowane do aktywnego profilu: {{ getProfileAudienceLabel(currentProfile) }}.</p>
     </section>
 
     <MediaRow title="Popularne seriale" subtitle="Kryminal, dramat i mocny klimat." :items="seriesLead" />

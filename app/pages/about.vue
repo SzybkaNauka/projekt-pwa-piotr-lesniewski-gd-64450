@@ -4,24 +4,30 @@
       <p class="about-page__eyebrow">O aplikacji</p>
       <h1 class="about-page__title">Prime Video</h1>
       <p class="about-page__text">
-        Projekt inspirowany nowoczesnymi platformami VOD. Aplikacja zostala przygotowana w Nuxt 4
-        z naciskiem na nowoczesny interfejs, routing oraz PWA. Warstwa komponentowa korzysta tez
-        z frameworka Bulma, zeby bylo to widoczne w projekcie.
+        Prime Video to projekt pokazowy przygotowany w celach naukowych jako dopracowana, nowoczesna
+        wersja aplikacji streamingowej z wyraznym klimatem premium. Calosc skupia sie na szybkim
+        przegladaniu katalogu, wygodnym wyborze profili, plynnej nawigacji i mocnym, filmowym interfejsie.
+      </p>
+      <p class="about-page__text about-page__text--secondary">
+        Od strony technicznej projekt laczy Nuxt 4, Vue 3, Bulme i PWA w jedna spojna calosc.
+        Efekt to lekka aplikacja webowa, ktora moze dzialac jak osobny program: instalowac sie,
+        otwierac w osobnym oknie i trzymac najwazniejsze dane lokalnie.
       </p>
 
       <div class="tags are-medium about-page__tags">
         <span class="tag is-info is-light">Nuxt 4</span>
-        <span class="tag is-link is-light">Bulma</span>
-        <span class="tag is-primary is-light">PWA</span>
+        <span class="tag is-link is-light">Vue 3</span>
+        <span class="tag is-primary is-light">Bulma</span>
+        <span class="tag is-info is-light">PWA</span>
       </div>
 
       <div class="about-page__install">
         <div>
-          <p class="about-page__install-label">Instalacja w Chrome</p>
+          <p class="about-page__install-label">Instalacja jako aplikacja</p>
           <p class="about-page__install-text">
-            Po uruchomieniu builda lub preview na localhost Chrome powinien pokazac mozliwosc
-            instalacji jako aplikacji. Po instalacji Prime Video otworzy sie w osobnym oknie i mozna
-            go normalnie odinstalowac z poziomu Chrome.
+            Po instalacji Prime Video uruchamia sie jak prawdziwa aplikacja: w osobnym oknie, bez
+            zbednych elementow przegladarki i z szybkim dostepem z pulpitu. W kazdej chwili mozna
+            ja tez normalnie odinstalowac bezposrednio z Chrome.
           </p>
         </div>
 
@@ -73,6 +79,11 @@
   font-size: 18px;
   line-height: 1.7;
   color: #d7e1ea;
+}
+
+.about-page__text--secondary {
+  margin-top: 14px;
+  color: #aebdcb;
 }
 
 .about-page__tags {

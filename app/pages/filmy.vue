@@ -3,7 +3,7 @@ const route = useRoute()
 const search = computed(() => String(route.query.q || '').trim().toLowerCase())
 
 const { movies, filterVisible } = useCatalog()
-const { currentProfile, hiddenIds } = useProfiles()
+const { currentProfile, hiddenIds, getProfileAudienceLabel } = useProfiles()
 
 const visibleMovies = computed(() => filterVisible(movies, currentProfile.value, hiddenIds.value))
 const filteredMovies = computed(() =>
@@ -29,7 +29,7 @@ const topMovies = computed(() => filteredMovies.value.slice(2, 8))
   <main class="page">
     <section class="page__hero page-wrap">
       <h1 class="page__title">Filmy</h1>
-      <p class="page__text">Najpopularniejsze filmy w klimacie premium streaming.</p>
+      <p class="page__text">Katalog filmow widoczny dla aktywnego profilu: {{ getProfileAudienceLabel(currentProfile) }}.</p>
     </section>
 
     <MediaRow
